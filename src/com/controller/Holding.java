@@ -64,12 +64,32 @@ public class Holding implements Initializable{
             new Thread(() -> {
                 while (true){
                     try {
-                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                        String res = (String) ois.readObject();
-                        if(res.equalsIgnoreCase("close")){
-                            socket.close();
-                            Platform.runLater(() -> callover());
-                            break;
+                        if (!socket.isClosed()){
+                            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                            String res = (String) ois.readObject();
+                            if(res.equalsIgnoreCase("close")){
+                                socket.close();
+                                Platform.runLater(() -> callover());
+                                break;
+                            }
+                            if (res.equalsIgnoreCase("accept")){
+                                socket.close();
+                                Platform.runLater(() -> {
+                                    try {
+                                        ObservableList<Stage> stage = FXRobotHelper.getStages();
+                                        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../view/acceptCall.fxml"));
+                                        Parent root = fxmlLoader.load();
+                                        AcceptCall acceptCall = fxmlLoader.getController();
+                                        acceptCall.startUDPClient();
+                                        acceptCall.setSocket(socket);
+                                        acceptCall.setTargetPort(targetPort+"");
+                                        Scene scene = new Scene(root);
+                                        stage.get(0).setScene(scene);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
                         }
                     } catch (IOException | ClassNotFoundException e ) {
                         e.printStackTrace();

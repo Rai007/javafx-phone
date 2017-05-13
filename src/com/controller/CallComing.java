@@ -28,11 +28,11 @@ public class CallComing implements Initializable{
     private Socket socket;
     private String sourcePort;
 
-    public void setSourcePort(String sourcePort) {
+    void setSourcePort(String sourcePort) {
         this.sourcePort = sourcePort;
     }
 
-    public void setSocket(Socket socket) {
+    void setSocket(Socket socket) {
         this.socket = socket;
     }
 
@@ -58,14 +58,27 @@ public class CallComing implements Initializable{
     }
     @FXML
     public void acceptCall(ActionEvent actionEvent) {
-
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            oos.writeObject("accept");
+            ObservableList<Stage> stage = FXRobotHelper.getStages();
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../view/acceptCall.fxml"));
+            Parent root = fxmlLoader.load();
+            AcceptCall acceptCall = fxmlLoader.getController();
+            acceptCall.startUDPServer();
+            acceptCall.setTargetPort(sourcePort);
+            Scene scene = new Scene(root);
+            stage.get(0).setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setTextField(String text){
+    void setTextField(String text){
         callcominginfo.setText(text);
     }
 
-    public void callover(String targetPort){
+    private void callover(String targetPort){
         try {
             ObservableList<Stage> stage = FXRobotHelper.getStages();
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../view/callover.fxml"));
@@ -86,13 +99,15 @@ public class CallComing implements Initializable{
         new Thread(() -> {
             try {
                 while (true){
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                    String res = (String) ois.readObject();
-                    if(res.equalsIgnoreCase("close")){
-                        socket.close();
-                        ois.close();
-                        Platform.runLater(() -> callover(sourcePort));
-                        break;
+                    if(!socket.isClosed()){
+                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                        String res = (String) ois.readObject();
+                        if(res.equalsIgnoreCase("close")){
+                            socket.close();
+                            ois.close();
+                            Platform.runLater(() -> callover(sourcePort));
+                            break;
+                        }
                     }
                 }
             } catch (IOException | ClassNotFoundException e) {

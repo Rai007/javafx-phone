@@ -18,6 +18,8 @@ public class Main extends Application {
 
     static int port;
 
+    static ServerSocket serverSocket;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         port = getRandomPort();
@@ -28,7 +30,7 @@ public class Main extends Application {
         primaryStage.show();
         new Thread(() -> {
             try {
-                ServerSocket serverSocket = new ServerSocket(port);
+                serverSocket = new ServerSocket(port);
                 while (true){
                     Socket socket = serverSocket.accept();
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());

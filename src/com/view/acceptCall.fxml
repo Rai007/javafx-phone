@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="826.0" prefWidth="743.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controller.AcceptCall">
+   <children>
+      <ImageView fx:id="acceptcallimg" fitHeight="207.0" fitWidth="234.0" layoutX="268.0" layoutY="123.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../image/talking2.png" />
+         </image>
+      </ImageView>
+      <TextField fx:id="calltime" alignment="CENTER" disable="true" editable="false" layoutX="186.0" layoutY="389.0" prefHeight="48.0" prefWidth="371.0" text="Call Time : 00:00:00" />
+      <Button fx:id="callhangup" layoutX="139.0" layoutY="592.0" mnemonicParsing="false" onAction="#callHangUp" prefHeight="99.0" prefWidth="144.0" text="hang up" />
+      <Button fx:id="callloader" layoutX="460.0" layoutY="592.0" mnemonicParsing="false" prefHeight="99.0" prefWidth="144.0" text="loader" />
+   </children>
+</Pane>
