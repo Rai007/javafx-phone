@@ -3,6 +3,7 @@ package com.controller;
 import com.sun.javafx.robot.impl.FXRobotHelper;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -21,67 +22,50 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import static com.controller.Main.port;
 
-public class Holding implements Initializable{
-    private int targetPort;
-
-    public void setTargetPort(int targetPort) {
-        this.targetPort = targetPort;
-    }
+public class CallComing implements Initializable{
 
     private Socket socket;
+    private String sourcePort;
 
-    @FXML
-    private TextField holdingInfo;
-    @FXML
-    private ImageView phoneIcon;
-    @FXML
-    private Button backToDial;
+    public void setSourcePort(String sourcePort) {
+        this.sourcePort = sourcePort;
+    }
 
-    public void setText(String s) {
-        holdingInfo.setText(s);
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 
     @FXML
-    public void back2Dial(){
+    public ImageView callcomingimg;
+    @FXML
+    public TextField callcominginfo;
+    @FXML
+    public Button rejectcall;
+    @FXML
+    public Button acceptcall;
+    @FXML
+    public void rejectCall(ActionEvent actionEvent) {
         try {
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.writeObject("close");
             oos.close();
             socket.close();
-            callover();
+           callover(sourcePort);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    @FXML
+    public void acceptCall(ActionEvent actionEvent) {
 
-    public void TCPConnect(){
-        try {
-            socket = new Socket("127.0.0.1",targetPort);
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject(port);
-            new Thread(() -> {
-                while (true){
-                    try {
-                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                        String res = (String) ois.readObject();
-                        if(res.equalsIgnoreCase("close")){
-                            socket.close();
-                            Platform.runLater(() -> callover());
-                            break;
-                        }
-                    } catch (IOException | ClassNotFoundException e ) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        } catch (IOException e) {
-            System.out.println("connect fail!");
-        }
     }
 
-    public void callover(){
+    public void setTextField(String text){
+        callcominginfo.setText(text);
+    }
+
+    public void callover(String targetPort){
         try {
             ObservableList<Stage> stage = FXRobotHelper.getStages();
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../view/callover.fxml"));
@@ -98,8 +82,22 @@ public class Holding implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        phoneIcon.setImage(new Image("file:///C:\\Users\\hahah\\IdeaProjects\\ip-phone\\image\\phone.png"));
+        callcomingimg.setImage(new Image("file:///C:\\Users\\hahah\\IdeaProjects\\ip-phone\\image\\callcoming.png"));
+        new Thread(() -> {
+            try {
+                while (true){
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    String res = (String) ois.readObject();
+                    if(res.equalsIgnoreCase("close")){
+                        socket.close();
+                        ois.close();
+                        Platform.runLater(() -> callover(sourcePort));
+                        break;
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
-
-
 }

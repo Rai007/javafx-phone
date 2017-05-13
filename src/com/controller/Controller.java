@@ -5,29 +5,28 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class Controller {
-    private Main app;
+import static com.controller.Main.port;
 
-    public Main getApp() {
-        return app;
-    }
-
-    public void setApp(Main app) {
-        this.app = app;
-    }
-
+public class Controller implements Initializable {
     @FXML
     private TextArea phonenumber;
     @FXML
-    private Button btn0,btn1,btn2,btn3,btn4,btn5,btn6,btn7,btn8,btn9,call,hang_up;
+    private Button btn0,btn1,btn2,btn3,btn4,btn5,btn6,btn7,btn8,btn9,call,backspace;
+
+    @FXML
+    private TextField portField;
 
     @FXML
     public void btnClick(ActionEvent actionEvent) {
@@ -39,18 +38,28 @@ public class Controller {
             phonenumber.setText(newStr);
         }
         if(id.equalsIgnoreCase("call")){
-            ObservableList<Stage> stage = FXRobotHelper.getStages();
-            Scene scene = null;
             try {
+                ObservableList<Stage> stage = FXRobotHelper.getStages();
                 FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../view/holding.fxml"));
                 Parent root = fxmlLoader.load();
                 Holding holding = fxmlLoader.getController();
-                holding.getTextField().setText("Waiting for "+oldStr+" accepting...");
-                scene = new Scene(root);
+                holding.setTargetPort(Integer.parseInt(oldStr));
+                holding.setText("Waiting for "+oldStr+" response...");
+                holding.TCPConnect();
+                Scene scene = new Scene(root);
                 stage.get(0).setScene(scene);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        if (id.equalsIgnoreCase("backspace")){
+            oldStr = oldStr.substring(0,oldStr.length()-1);
+            phonenumber.setText(oldStr);
+        }
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        portField.setText("Local server port is :"+ port);
     }
 }

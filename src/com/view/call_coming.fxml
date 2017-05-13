@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="826.0" prefWidth="743.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controller.CallComing">
+   <children>
+      <ImageView fx:id="callcomingimg" fitHeight="150.0" fitWidth="200.0" layoutX="297.0" layoutY="161.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../image/callcoming.png" />
+         </image>
+      </ImageView>
+      <TextField fx:id="callcominginfo" alignment="CENTER" disable="true" editable="false" layoutX="151.0" layoutY="413.0" prefHeight="76.0" prefWidth="442.0" text="***** wants to call you ..." />
+      <Button fx:id="rejectcall" layoutX="151.0" layoutY="619.0" mnemonicParsing="false" onAction="#rejectCall" prefHeight="76.0" prefWidth="107.0" text="reject" />
+      <Button fx:id="acceptcall" layoutX="464.0" layoutY="619.0" mnemonicParsing="false" onAction="#acceptCall" prefHeight="76.0" prefWidth="129.0" text="accept" />
+   </children>
+</Pane>
