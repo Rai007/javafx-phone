@@ -50,7 +50,7 @@ public class CallComing implements Initializable{
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.writeObject("close");
             oos.close();
-            socket.close();
+//            socket.close();
            callover(sourcePort);
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,6 +66,7 @@ public class CallComing implements Initializable{
             Parent root = fxmlLoader.load();
             AcceptCall acceptCall = fxmlLoader.getController();
             acceptCall.startUDPServer();
+            acceptCall.setSocket(socket);
             acceptCall.setTargetPort(sourcePort);
             Scene scene = new Scene(root);
             stage.get(0).setScene(scene);
@@ -103,7 +104,6 @@ public class CallComing implements Initializable{
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                         String res = (String) ois.readObject();
                         if(res.equalsIgnoreCase("close")){
-                            socket.close();
                             ois.close();
                             Platform.runLater(() -> callover(sourcePort));
                             break;

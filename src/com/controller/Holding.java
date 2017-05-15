@@ -49,7 +49,7 @@ public class Holding implements Initializable{
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.writeObject("close");
             oos.close();
-            socket.close();
+//            socket.close();
             callover();
         } catch (IOException e) {
             e.printStackTrace();
@@ -68,12 +68,11 @@ public class Holding implements Initializable{
                             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                             String res = (String) ois.readObject();
                             if(res.equalsIgnoreCase("close")){
-                                socket.close();
+//                                socket.close();
                                 Platform.runLater(() -> callover());
                                 break;
                             }
                             if (res.equalsIgnoreCase("accept")){
-                                socket.close();
                                 Platform.runLater(() -> {
                                     try {
                                         ObservableList<Stage> stage = FXRobotHelper.getStages();
@@ -89,6 +88,7 @@ public class Holding implements Initializable{
                                         e.printStackTrace();
                                     }
                                 });
+                                break;
                             }
                         }
                     } catch (IOException | ClassNotFoundException e ) {

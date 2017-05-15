@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.sun.javafx.robot.impl.FXRobotHelper;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -16,6 +17,7 @@ import javafx.stage.Stage;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ResourceBundle;
@@ -23,14 +25,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by hahah on 2017/5/13.
- */
 public class AcceptCall implements Initializable {
 
     static boolean play = true;
     static boolean record = true;
     final int[] timer = {0};
+    final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+    DatagramSocket datagramSocket = null;
 
     public void setTargetPort(String targetPort) {
         this.targetPort = targetPort;
@@ -54,7 +55,6 @@ public class AcceptCall implements Initializable {
     public Button callloader;
 
     public void startUDPServer(){
-        DatagramSocket datagramSocket = null;
         try {
             datagramSocket = new DatagramSocket(12003);
             DatagramSocket finalDatagramSocket = datagramSocket;
@@ -65,8 +65,8 @@ public class AcceptCall implements Initializable {
                     speaker.open(getFormat());
                     speaker.start();
                     while (play){
-                        byte[] buffer = new byte[2048];
-                        DatagramPacket datagramPacket = new DatagramPacket(buffer,0,buffer.length);
+                        byte[] buffer = new byte[1024];
+                        DatagramPacket datagramPacket = new DatagramPacket(buffer,0,1024);
                         finalDatagramSocket.receive(datagramPacket);
                         byte[] data = datagramPacket.getData();
                         speaker.write(data,0,data.length);
@@ -84,12 +84,12 @@ public class AcceptCall implements Initializable {
                     DataLine.Info micInfo = new DataLine.Info(TargetDataLine.class,getFormat());
                     TargetDataLine mic = (TargetDataLine) AudioSystem.getLine(micInfo);
                     mic.open(getFormat());
-                    byte[] tmpBuff = new byte[2048];
+                    byte[] tmpBuff = new byte[1024];
                     mic.start();
                     while (record){
-                        int count = mic.read(tmpBuff,0,tmpBuff.length);
+                        int count = mic.read(tmpBuff,0,1024);
                         if (count > 0){
-                            DatagramPacket datagramPacket = new DatagramPacket(tmpBuff,tmpBuff.length,InetAddress.getByName("127.0.0.1"),12004);
+                            DatagramPacket datagramPacket = new DatagramPacket(tmpBuff,1024,InetAddress.getByName("127.0.0.1"),12004);
                             datagramSocket1.send(datagramPacket);
                         }
                     }
@@ -100,23 +100,24 @@ public class AcceptCall implements Initializable {
                 }
             }).start();
 
-            /*new Thread(() -> {
-                System.out.println("server socket : "+socket.getLocalPort());
+            new Thread(() -> {
                 while (true){
                         try {
                             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                             String res = (String) ois.readObject();
                             if(res.equalsIgnoreCase("callover")){
-                                ois.close();
-                                socket.close();
                                 Platform.runLater(() -> callover());
+                                finalDatagramSocket.close();
                                 break;
                             }
                         } catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
+                            if (e instanceof SocketException){
+                                Platform.runLater(() -> callover());
+                                break;
+                            }
                         }
                 }
-            }).start();*/
+            }).start();
 
         } catch (SocketException e) {
             e.printStackTrace();
@@ -125,7 +126,7 @@ public class AcceptCall implements Initializable {
     }
 
     private AudioFormat getFormat() {
-        float sampleRate = 12000;
+        float sampleRate = 14000;
         int sampleSizeInBits = 16;
         int channles = 2;
         boolean signed = true;
@@ -134,7 +135,6 @@ public class AcceptCall implements Initializable {
     }
 
     public void startUDPClient(){
-        DatagramSocket datagramSocket = null;
         try {
             datagramSocket = new DatagramSocket(12004);
             DatagramSocket finalDatagramSocket = datagramSocket;
@@ -145,9 +145,14 @@ public class AcceptCall implements Initializable {
                     speaker.open(getFormat());
                     speaker.start();
                     while (play){
-                        byte[] buffer = new byte[2048];
-                        DatagramPacket datagramPacket = new DatagramPacket(buffer,0,buffer.length);
-                        finalDatagramSocket.receive(datagramPacket);
+                        byte[] buffer = new byte[1024];
+                        DatagramPacket datagramPacket = new DatagramPacket(buffer,0,1024);
+                        try {
+                            finalDatagramSocket.receive(datagramPacket);
+                        }catch (SocketException e){
+                            System.out.println("udp socket closed!");
+                            break;
+                        }
                         byte[] data = datagramPacket.getData();
                         speaker.write(data,0,data.length);
                     }
@@ -164,12 +169,12 @@ public class AcceptCall implements Initializable {
                     DataLine.Info micInfo = new DataLine.Info(TargetDataLine.class,getFormat());
                     TargetDataLine mic = (TargetDataLine) AudioSystem.getLine(micInfo);
                     mic.open(getFormat());
-                    byte[] tmpBuff = new byte[2048];
+                    byte[] tmpBuff = new byte[1024];
                     mic.start();
                     while (record){
-                        int count = mic.read(tmpBuff,0,tmpBuff.length);
+                        int count = mic.read(tmpBuff,0,1024);
                         if (count > 0){
-                            DatagramPacket datagramPacket = new DatagramPacket(tmpBuff,tmpBuff.length,InetAddress.getByName("127.0.0.1"),12003);
+                            DatagramPacket datagramPacket = new DatagramPacket(tmpBuff,1024,InetAddress.getByName("127.0.0.1"),12003);
                             datagramSocket1.send(datagramPacket);
                         }
                     }
@@ -180,25 +185,28 @@ public class AcceptCall implements Initializable {
                 }
             }).start();
 
-            /*new Thread(() -> {
-                System.out.println("Client socket : "+socket.getLocalPort());
+            new Thread(() -> {
                 while (true){
                     if(!socket.isClosed()){
                         try {
                             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                             String res = (String) ois.readObject();
                             if(res.equalsIgnoreCase("callover")){
-                                socket.close();
-                                ois.close();
                                 Platform.runLater(() -> callover());
+                                finalDatagramSocket.close();
                                 break;
                             }
                         } catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
+                            if (e instanceof SocketException){
+                                Platform.runLater(() -> callover());
+                                finalDatagramSocket.close();
+                                break;
+                            }
                         }
                     }
                 }
-            }).start();*/
+            }).start();
+
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -207,17 +215,15 @@ public class AcceptCall implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         acceptcallimg.setImage(new Image("file:///C:\\Users\\hahah\\IdeaProjects\\ip-phone\\image\\talking2.png"));
-        final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleWithFixedDelay(() -> {
-            calltime.setText("Call Time : "+(timer[0]++)+"s");
-        }, 0, 1, TimeUnit.SECONDS);
+        ses.scheduleWithFixedDelay(() -> calltime.setText("Call Time : "+(timer[0]++)+"s"), 0, 1, TimeUnit.SECONDS);
     }
     @FXML
     public void callHangUp(ActionEvent actionEvent) {
         play = false;
         record = false;
         try {
-            System.out.println("hang up :"+socket.getLocalPort());
+            System.out.println("hang up");
+            datagramSocket.close();
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.writeObject("callover");
             callover();
