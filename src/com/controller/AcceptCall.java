@@ -126,7 +126,7 @@ public class AcceptCall implements Initializable {
     }
 
     private AudioFormat getFormat() {
-        float sampleRate = 14000;
+        float sampleRate = 8000;
         int sampleSizeInBits = 16;
         int channles = 2;
         boolean signed = true;
